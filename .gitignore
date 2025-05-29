@@ -1,0 +1,67 @@
+# Ignorar archivos y directorios específicos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+# Directorios de entorno virtual
+# Puedes añadir otros nombres si usas diferentes convenciones
+# Por ejemplo:
+# .env/
+# .venv/
+# env/
+
+# Archivos de configuración de PyCharm
+.idea/
+
+# Archivos de configuración de VS Code
+.vscode/
+
+# Archivos de caché de pytest
+.pytest_cache/
+
+# Archivos de caché de mypy
+.mypy_cache/
+
+# Archivos de registro y bases de datos temporales
+*.log
+*.sqlite3
+*.db
+
+# Archivos de configuración de IDE específicos
+# Por ejemplo, para Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Archivos generados por el sistema operativo
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Archivos de paquetes de distribución
+dist/
+build/
+*.egg-info/
+
+# Archivos de Jupyter Notebook (si aplica)
+.ipynb_checkpoints/
+
+# Archivos de entorno (variables de entorno)
+.env
+.flaskenv
+
+# Archivos de cobertura de código
+.coverage
+htmlcov/
+
+# Archivos de documentación generados
+docs/_build/
+
+# Archivos de configuración de FastAPI/Uvicorn que podrían generarse
+# (Generalmente no hay muchos archivos específicos de FastAPI para ignorar,
+# pero si tu aplicación crea logs o archivos temporales, puedes añadirlos aquí)
+# Por ejemplo:
+# uvicorn.log
+# app_data/
