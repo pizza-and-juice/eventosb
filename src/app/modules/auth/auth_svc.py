@@ -39,7 +39,6 @@ async def create_user(dto: RegisterDto, db: AsyncSession):
         password=hashed_password,
         first_name=dto.first_name,
         last_name=dto.last_name,
-        pfp=""
     )
 
     db.add(new_user)

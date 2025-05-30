@@ -138,7 +138,6 @@ async def retrieve_by_id(event_id: UUID, db: AsyncSession) -> EventDetailRespons
             }
         )
     
-    random_image_id = random.randint(1, 1000)  # Random image ID for demonstration
 
     counts_result = await db.execute(
         select(
@@ -159,7 +158,7 @@ async def retrieve_by_id(event_id: UUID, db: AsyncSession) -> EventDetailRespons
         title=event.title,
         subtitle=event.subtitle,
         description=event.description,
-        image=f"https://picsum.photos/id/{random_image_id}/800",  # Placeholder for image URL
+        image=event.image,
         country=event.country,
         city=event.city,
         address=event.address,
@@ -192,11 +191,14 @@ async def create_event(dto: CreateEventDto, image: UploadFile, user: User, db: A
     """
     Create a new event.
     """
+
+    random_image_id = random.randint(1, 1000)
+
     new_event = Event(
         title=dto.title,
         subtitle=dto.subtitle,
         description=dto.description,
-        image=image.filename,  # Assuming image is saved and filename is used
+        image=f"https://picsum.photos/id/{random_image_id}/200",  # Placeholder for image URL
         country=dto.country,
         city=dto.city,
         address=dto.address,

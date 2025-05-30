@@ -23,7 +23,7 @@ from .event_attendees_responses import ListAttendingEventsResponse
 
 async def list_attending_events(
     db: AsyncSession,
-    user: User
+    user_id: str,
 ) -> ListAttendingEventsResponse:
     
     result = await db.execute(
@@ -31,7 +31,7 @@ async def list_attending_events(
         .join(EventAttendee)
         .options(joinedload(Event.attendees))  # optional, preload attendees if needed
         .where(
-            EventAttendee.user_id == user.id,
+            EventAttendee.user_id == user_id,
             EventAttendee.event_role.in_([EventRoleEnum.ATTENDEE, EventRoleEnum.SPEAKER])
         )
         .order_by(Event.created_at)
@@ -102,14 +102,19 @@ async def list_attending_events(
 
 async def list_attending_ids(
     db: AsyncSession,
+    event_ids: List[str],
     user: User
 ) -> List[str]:
+    
+    if len(event_ids) == 0:
+        return []
     
     result = await db.execute(
         select(EventAttendee.event_id)
         .where(
             EventAttendee.user_id == user.id,
-            EventAttendee.event_role.in_([EventRoleEnum.ATTENDEE, EventRoleEnum.SPEAKER])
+            EventAttendee.event_role.in_([EventRoleEnum.ATTENDEE, EventRoleEnum.SPEAKER]),
+            EventAttendee.event_id.in_(event_ids)
         )
     )
 
@@ -127,7 +132,7 @@ async def list_attending_ids(
 
 async def list_created_events(
     db: AsyncSession,
-    user: User
+    user_id: str
 ) -> ListCreatedEventsResponse:
     
     result = await db.execute(
@@ -135,13 +140,15 @@ async def list_created_events(
         .join(EventAttendee)
         .options(joinedload(Event.attendees))  # si quieres traer los asistentes
         .where(
-            EventAttendee.user_id == user.id,
+            EventAttendee.user_id == user_id,
             EventAttendee.event_role == EventRoleEnum.ORGANIZER
         )
         .order_by(Event.created_at.desc())
     )
 
     events = result.unique().scalars().all()
+
+    print(f"------------------Found {len(events)} created events for user {user_id}")
 
     if len(events) == 0:
         return ListCreatedEventsResponse(
