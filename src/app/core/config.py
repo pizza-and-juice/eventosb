@@ -12,13 +12,16 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        ca_cert_path = Path(__file__).parent / "certs" / "ca-certificate.crt"
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode=require&sslrootcert={ca_cert_path}"
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
+    @property
+    def CA_CERT_PATH(self) -> Path:
+        return Path(__file__).parent.parent / "certs" / "ca-certificate.crt"
+    
     @property
     def SECRET_KEY(self) -> str:
         return self.JWT_SECRET_KEY
