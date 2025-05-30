@@ -33,7 +33,7 @@ class EventBaseResponse(BaseModel):
 
 
 
-class attendeeDetail(BaseModel):
+class AttendeeDetail(BaseModel):
     id: UUID
     name: str
     email: str
@@ -64,7 +64,7 @@ class EventDetailResponse(EventBaseResponse):
 
     attendees_capacity: int
 
-    attendees_list: List[attendeeDetail]
+    attendees_list: List[AttendeeDetail]
     host: AttendeeHost
 
     status: EventStatusEnum

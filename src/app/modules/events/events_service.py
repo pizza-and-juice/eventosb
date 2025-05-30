@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError  
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 
 from .events_model import Event
 from .event_attendees_model import EventAttendee
@@ -26,6 +27,7 @@ from .events_responses import (
     CreateEventResponse,
     DeleteEventResponse,
     AttendeeHost,
+    AttendeeDetail
 )
 
 async def list_events(db: AsyncSession) -> ListEvenstResponse:
@@ -48,6 +50,25 @@ async def list_events(db: AsyncSession) -> ListEvenstResponse:
             )
         )        
     
+    event_ids = [e.id for e in events]
+
+    # Count attendees/speakers grouped by (event_id, role)
+    counts_result = await db.execute(
+        select(
+            EventAttendee.event_id,
+            EventAttendee.event_role,
+            func.count().label("count")
+        ).where(
+            EventAttendee.event_id.in_(event_ids),
+            EventAttendee.event_role.in_([EventRoleEnum.ATTENDEE, EventRoleEnum.SPEAKER])
+        ).group_by(EventAttendee.event_id, EventAttendee.event_role)
+    )
+
+    counts_map = {}
+    for event_id, role, count in counts_result.all():
+        if event_id not in counts_map:
+            counts_map[event_id] = {EventRoleEnum.ATTENDEE: 0, EventRoleEnum.SPEAKER: 0}
+        counts_map[event_id][role] = count
 
     return ListEvenstResponse(
         events=[EventBaseResponse(
@@ -62,8 +83,8 @@ async def list_events(db: AsyncSession) -> ListEvenstResponse:
             end_date=e.end_date,
             website=e.website,
             attendees_capacity=e.attendees_capacity,
-            attendees=0,
-            speakers=0,
+            attendees=counts_map.get(e.id, {}).get(EventRoleEnum.ATTENDEE, 0),
+            speakers=counts_map.get(e.id, {}).get(EventRoleEnum.SPEAKER, 0),
             created_at=e.created_at,
             status=e.status
         ) for e in events],
@@ -79,7 +100,14 @@ async def retrieve_by_id(event_id: UUID, db: AsyncSession) -> EventDetailRespons
     """
     Retrieve an event by its ID.
     """
-    result = await db.execute(select(Event).where(Event.id == event_id))
+    result = await db.execute(
+        select(Event)
+        .options(
+            selectinload(Event.attendees)
+            .selectinload(EventAttendee.user),
+        )
+        .where(Event.id == event_id)
+    )
     event = result.scalar_one_or_none()
 
     if not event:
@@ -139,7 +167,15 @@ async def retrieve_by_id(event_id: UUID, db: AsyncSession) -> EventDetailRespons
         end_date=event.end_date,
         website=event.website,
         attendees_capacity=event.attendees_capacity,
-        attendees_list=[],  # Placeholder for attendees list
+        attendees_list=[
+            AttendeeDetail(
+                id=a.user.id,
+                email= a.user.email,
+                name=f"{a.user.first_name} {a.user.last_name}",
+                pfp=a.user.pfp,
+                attendee_role= a.event_role
+            ) for a in event.attendees
+        ],
         attendees=attendees_count,
         speakers= speakers_count,
         host= AttendeeHost(
@@ -182,6 +218,9 @@ async def create_event(dto: CreateEventDto, image: UploadFile, user: User, db: A
         db.add(host)
         await db.flush()  # Flush to ensure the new event is saved before refreshing
         await db.refresh(new_event)
+
+        # commit 
+        await db.commit()
 
         return CreateEventResponse(id=new_event.id)
 
