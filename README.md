@@ -63,6 +63,9 @@ pip install poetry
 # Instalar dependencias
 poetry install
 
+# correr migraciones
+poetry run alembic upgrade head
+
 # Comenzar la app
 poetry run uvicorn src.app.main:app --reload
 ```
